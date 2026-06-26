@@ -20,6 +20,9 @@ from typing import Any, Optional
 
 import pefile
 
+from defensive_binary_audit.ci_validation.behavioral.core_analyzer import BehavioralDifferentialOrchestrator
+from defensive_binary_audit.ci_validation.behavioral.io_handler import BehavioralOutputHandler
+from defensive_binary_audit.ci_validation.behavioral.logging_diagnostics import get_behavioral_logger
 from defensive_binary_audit.ci_validation.models import (
     CIValidationPhase,
     CIFullTestReport,
@@ -579,12 +582,86 @@ class CIFullTestOrchestrator:
         all_checks.extend(wine_checks)
 
         patched_behavior = None
+        differential_behavior = None
         if recon_path and recon_path.exists():
             patched_behavior, patch_checks = PatchedImageBehaviorValidator(
                 timeout_sec=self.wine_timeout_sec,
                 survival_threshold_sec=self.main_loop_survival_sec,
             ).run(recon_path, prefix)
             all_checks.extend(patch_checks)
+
+            integrity_sites = self._integrity_sites_from_report(written.get("final_report"))
+            beh_logger = get_behavioral_logger()
+            beh_logger.info(
+                "Running differential behavioral analysis baseline vs reconstructed PE"
+            )
+            differential_behavior = BehavioralDifferentialOrchestrator(
+                timeout_sec=self.wine_timeout_sec,
+                survival_threshold_sec=self.main_loop_survival_sec,
+                integrity_sites_patched=integrity_sites,
+            ).run(
+                original_target=target,
+                reconstructed_pe=recon_path,
+                prefix=prefix,
+                target_sha256=target_sha256,
+            )
+            BehavioralOutputHandler().write(differential_behavior, output_dir)
+
+            flags = differential_behavior.flags
+            all_checks.extend([
+                ValidationCheck(
+                    check_id="BEHAV-STARTUP",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="startup_stable",
+                    status=ValidationStatus.PASS if flags.startup_stable else ValidationStatus.WARN,
+                    message=f"startup_stable={flags.startup_stable}",
+                ),
+                ValidationCheck(
+                    check_id="BEHAV-DIALOG",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="dialog_anomaly_absent",
+                    status=ValidationStatus.PASS if flags.dialog_anomaly_absent else ValidationStatus.WARN,
+                    message=f"dialog_anomaly_absent={flags.dialog_anomaly_absent}",
+                ),
+                ValidationCheck(
+                    check_id="BEHAV-MAINLOOP",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="main_loop_entry_confirmed",
+                    status=ValidationStatus.PASS if flags.main_loop_entry_confirmed else ValidationStatus.WARN,
+                    message=f"main_loop_entry_confirmed={flags.main_loop_entry_confirmed}",
+                ),
+                ValidationCheck(
+                    check_id="BEHAV-CRASH",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="crash_signature_none",
+                    status=ValidationStatus.PASS if flags.crash_signature_none else ValidationStatus.WARN,
+                    message=f"crash_signature_none={flags.crash_signature_none}",
+                ),
+            ])
+            if differential_behavior.wine_available:
+                all_checks.append(ValidationCheck(
+                    check_id="BEHAV-DIFF",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="Differential behavioral analysis",
+                    status=(
+                        ValidationStatus.PASS
+                        if differential_behavior.overall_behavioral_pass
+                        else ValidationStatus.WARN
+                    ),
+                    message=(
+                        f"overall_behavioral_pass={differential_behavior.overall_behavioral_pass} "
+                        f"({len(differential_behavior.startup_sequence_diff)} sequence phases compared)"
+                    ),
+                    evidence=differential_behavior.behavioral_delta_notes[:5],
+                ))
+            else:
+                all_checks.append(ValidationCheck(
+                    check_id="BEHAV-SKIP",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="Differential behavioral analysis",
+                    status=ValidationStatus.SKIP,
+                    message="Wine unavailable — behavioral differential skipped",
+                ))
 
         overall = all(
             c.status in (ValidationStatus.PASS, ValidationStatus.WARN, ValidationStatus.SKIP)
@@ -602,7 +679,19 @@ class CIFullTestOrchestrator:
             checks=all_checks,
             wine_baseline=wine_result,
             patched_behavior=patched_behavior,
+            differential_behavior=differential_behavior,
             reconstructed_validation=recon_val,
             overall_pass=overall,
             output_directory=str(output_dir),
         )
+
+    @staticmethod
+    def _integrity_sites_from_report(final_report_path: Optional[Path]) -> int:
+        if not final_report_path or not final_report_path.exists():
+            return 0
+        try:
+            data = json.loads(final_report_path.read_text())
+            phase3 = data.get("phase3_summary", {})
+            return int(phase3.get("patches_applied") or phase3.get("branches") or 0)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            return 0

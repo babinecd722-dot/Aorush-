@@ -28,9 +28,14 @@ def run_ci_full_test(
     logger.info("Starting CI full test validation")
 
     ci_cfg = (config or {}).get("ci_validation", {})
+    beh_cfg = (config or {}).get("behavioral_validation", {})
+    timeout = int(beh_cfg.get("wine_timeout_sec") or ci_cfg.get("wine_timeout_sec", 25))
+    survival = float(
+        beh_cfg.get("main_loop_survival_sec") or ci_cfg.get("main_loop_survival_sec", 5.0)
+    )
     report = CIFullTestOrchestrator(
-        wine_timeout_sec=int(ci_cfg.get("wine_timeout_sec", 20)),
-        main_loop_survival_sec=float(ci_cfg.get("main_loop_survival_sec", 5.0)),
+        wine_timeout_sec=timeout,
+        main_loop_survival_sec=survival,
     ).run(
         target=target,
         target_sha256=target_sha256,

@@ -8,6 +8,8 @@ import enum
 from dataclasses import dataclass, field, asdict
 from typing import Any, Optional
 
+from defensive_binary_audit.ci_validation.behavioral.models import DifferentialBehaviorReport
+
 
 class CIValidationPhase(str, enum.Enum):
     DEPENDENCY_CHECK = "dependency_check"
@@ -96,6 +98,7 @@ class CIFullTestReport:
     checks: list[ValidationCheck]
     wine_baseline: Optional[WineBaselineResult]
     patched_behavior: Optional[PatchedImageBehaviorResult]
+    differential_behavior: Optional[DifferentialBehaviorReport]
     reconstructed_validation: Optional[ReconstructedPEValidation]
     overall_pass: bool
     output_directory: str

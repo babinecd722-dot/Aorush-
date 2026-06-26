@@ -114,9 +114,16 @@
   },
   "ci_validation": {
     "wine_prefix": "/tmp/defensive-audit-wine-prefix",
-    "wine_timeout_sec": 20,
+    "wine_timeout_sec": 25,
     "main_loop_survival_sec": 5.0,
     "require_wine": false,
     "output_subdirectory": "ci_reports"
+  },
+  "behavioral_validation": {
+    "wine_timeout_sec": 25,
+    "main_loop_survival_sec": 5.0,
+    "poll_interval_sec": 0.25,
+    "require_all_flags": false,
+    "winedebug_channels": "+timestamp,+msg,+dialog,+seh,err+all"
   }
 }

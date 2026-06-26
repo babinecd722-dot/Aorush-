@@ -66,4 +66,22 @@ class CIOutputHandler:
                 f"- Main loop initialized: {pb.main_loop_initialized}",
                 f"- License patterns: {pb.license_strings_detected}",
             ])
+        if report.differential_behavior:
+            db = report.differential_behavior
+            fl = db.flags
+            lines.extend([
+                "",
+                "## Differential Behavioral Analysis",
+                "",
+                f"- overall_behavioral_pass: {db.overall_behavioral_pass}",
+                f"- startup_stable: {fl.startup_stable}",
+                f"- dialog_anomaly_absent: {fl.dialog_anomaly_absent}",
+                f"- main_loop_entry_confirmed: {fl.main_loop_entry_confirmed}",
+                f"- crash_signature_none: {fl.crash_signature_none}",
+            ])
+            for entry in db.startup_sequence_diff[:6]:
+                lines.append(
+                    f"  - {entry.phase}: baseline={entry.baseline_count} "
+                    f"reconstructed={entry.reconstructed_count} (Δ{entry.delta})"
+                )
         return "\n".join(lines)
