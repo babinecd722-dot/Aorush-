@@ -18,6 +18,7 @@ dependencies = [
 defensive-binary-audit = "defensive_binary_audit.main:main"
 unpack-emulator = "defensive_binary_audit.unpack_emulator.main:main"
 patch-emulator = "defensive_binary_audit.integrity_patch_emulator.main:main"
+defensive-pipeline = "defensive_binary_audit.defensive_pipeline.main:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

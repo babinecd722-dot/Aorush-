@@ -99,5 +99,17 @@
       "log_file": "logs/patch_emulator.log",
       "console_output": true
     }
+  },
+  "unified_pipeline": {
+    "output_directory": "patch_artifacts",
+    "run_phase1": true,
+    "run_phase2": true,
+    "run_phase3": true,
+    "run_phase4": true,
+    "logging": {
+      "level": "INFO",
+      "log_file": "logs/pipeline.log",
+      "console_output": true
+    }
   }
 }
