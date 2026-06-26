@@ -78,5 +78,26 @@
       "log_file": "logs/unpack_emulator.log",
       "console_output": true
     }
+  },
+  "integrity_patch_emulator": {
+    "max_branch_sites": 50,
+    "max_patches_apply": 10,
+    "run_brief_emulation": true,
+    "brief_emulation_instructions": 50000,
+    "export_full_pe_reconstruction": true,
+    "export_text_section": true,
+    "export_raw_regions": true,
+    "output": {
+      "directory": "patch_artifacts",
+      "write_json_report": true,
+      "write_markdown_report": true,
+      "write_memory_dumps": true,
+      "write_edr_indicators": true
+    },
+    "logging": {
+      "level": "INFO",
+      "log_file": "logs/patch_emulator.log",
+      "console_output": true
+    }
   }
 }

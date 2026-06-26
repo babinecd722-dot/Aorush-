@@ -4,4 +4,5 @@ __pycache__/
 logs/
 reports/
 unpack_artifacts/
+patch_artifacts/
 *.tmp
