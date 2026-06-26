@@ -54,5 +54,29 @@
     "log_file": "logs/audit.log",
     "console_output": true,
     "structured_json_logs": false
+  },
+  "unpack_emulator": {
+    "timeout_ms": 30000,
+    "max_instructions": 2000000,
+    "max_dump_bytes": 4096,
+    "max_dump_regions": 32,
+    "hook_api_calls": true,
+    "capture_on_virtualprotect_rx": true,
+    "capture_on_bulk_write": true,
+    "bulk_write_threshold": 4096,
+    "attempt_static_decrypt": true,
+    "output": {
+      "directory": "unpack_artifacts",
+      "write_memory_dumps": true,
+      "write_import_table": true,
+      "write_json_report": true,
+      "write_markdown_report": true,
+      "formats": ["json", "markdown", "bin"]
+    },
+    "logging": {
+      "level": "INFO",
+      "log_file": "logs/unpack_emulator.log",
+      "console_output": true
+    }
   }
 }
