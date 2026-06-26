@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "analysis": {
+    "max_file_size_mb": 256,
+    "entropy_threshold": 7.0,
+    "min_string_length": 6,
+    "max_strings_extracted": 50000,
+    "enable_dynamic_emulation": true,
+    "emulation_timeout_ms": 5000,
+    "emulation_max_instructions": 500000,
+    "scan_access_control_patterns": true,
+    "detect_packers": true,
+    "verify_checksums": true
+  },
+  "access_control_patterns": {
+    "license_keywords": [
+      "license", "licence", "serial", "activation", "register",
+      "trial", "expired", "valid", "invalid", "key", "hwid",
+      "hardware id", "machine id", "product key", "subscription"
+    ],
+    "auth_api_patterns": [
+      "CryptAcquireContext", "CryptEncrypt", "CryptDecrypt",
+      "CryptHashData", "BCrypt", "NCrypt", "RegOpenKey",
+      "RegQueryValue", "GetVolumeInformation", "GetAdaptersInfo",
+      "GetComputerName", "IsDebuggerPresent", "CheckRemoteDebuggerPresent",
+      "NtQueryInformationProcess", "CreateMutex", "OpenMutex",
+      "InternetOpen", "HttpSendRequest", "WinHttpConnect",
+      "URLDownloadToFile", "CreateProcess", "ShellExecute"
+    ],
+    "registry_paths": [
+      "SOFTWARE\\\\", "CurrentVersion\\\\Run", "AppData\\\\",
+      "Classes\\\\", "MachineGuid", "ProductId"
+    ]
+  },
+  "risk_scoring": {
+    "unsigned_binary": 15,
+    "high_entropy_section": 20,
+    "minimal_imports": 25,
+    "suspicious_section_names": 20,
+    "access_control_detected": 10,
+    "debugger_checks": 15,
+    "network_callbacks": 20,
+    "process_injection_apis": 30
+  },
+  "output": {
+    "formats": ["json", "markdown"],
+    "include_raw_strings": false,
+    "include_disassembly_preview": true,
+    "disassembly_instruction_count": 64,
+    "report_directory": "reports"
+  },
+  "logging": {
+    "level": "INFO",
+    "log_file": "logs/audit.log",
+    "console_output": true,
+    "structured_json_logs": false
+  }
+}

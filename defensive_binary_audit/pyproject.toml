@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "defensive-binary-audit"
+version = "1.0.0"
+description = "Defensive Binary Audit Toolkit — automated PE executable auditing for infrastructure early-warning"
+requires-python = ">=3.10"
+dependencies = [
+    "pefile>=2023.2.7",
+    "capstone>=5.0.1",
+    "unicorn>=2.0.1.post1",
+    "yara-python>=4.5.0",
+]
+
+[project.scripts]
+defensive-binary-audit = "defensive_binary_audit.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]

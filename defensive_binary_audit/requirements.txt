@@ -1,0 +1,4 @@
+pefile>=2023.2.7
+capstone>=5.0.1
+unicorn>=2.0.1.post1
+yara-python>=4.5.0
