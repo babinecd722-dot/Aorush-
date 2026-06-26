@@ -1,0 +1,69 @@
+"""Section 4: Input/Output Handler — CI Validation"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from defensive_binary_audit.ci_validation.models import CIFullTestReport
+
+
+class CIOutputHandler:
+    def write(self, report: CIFullTestReport, output_dir: Path) -> Path:
+        sub = output_dir / "ci_reports"
+        sub.mkdir(parents=True, exist_ok=True)
+        path = sub / f"{report.report_id}_CI_FULL_TEST.json"
+        path.write_text(json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+        md = sub / f"{report.report_id}_CI_FULL_TEST.md"
+        md.write_text(self._markdown(report), encoding="utf-8")
+        return path
+
+    def _markdown(self, report: CIFullTestReport) -> str:
+        lines = [
+            f"# CI Full Test Report",
+            "",
+            f"**Overall:** {'PASS' if report.overall_pass else 'FAIL'}",
+            f"**Target:** {report.target_filename}",
+            f"**Pipeline:** {report.pipeline_report_id} ({'OK' if report.pipeline_success else 'FAIL'})",
+            "",
+            "## Validation Checks",
+            "",
+        ]
+        for c in report.checks:
+            lines.append(f"- [{c.status.value.upper()}] **{c.name}**: {c.message}")
+        if report.wine_baseline:
+            wb = report.wine_baseline
+            lines.extend([
+                "",
+                "## Wine Baseline",
+                "",
+                f"- Survived: {wb.process_survived_seconds}s",
+                f"- Exit code: {wb.exit_code}",
+                f"- Main loop proxy: {wb.main_loop_proxy}",
+                f"- License patterns: {wb.license_strings_detected}",
+            ])
+        if report.reconstructed_validation:
+            rv = report.reconstructed_validation
+            lines.extend([
+                "",
+                "## Reconstructed PE",
+                "",
+                f"- Parseable: {rv.parseable}",
+                f"- Sections: {rv.sections}",
+                f"- Text size: {rv.text_section_size}",
+                f"- NOP patches in dump: {rv.inline_nop_count}",
+                f"- Memory/file mismatches: {rv.memory_file_mismatch_sections}",
+            ])
+        if report.patched_behavior:
+            pb = report.patched_behavior
+            lines.extend([
+                "",
+                "## Patched Image Behavioral Validation",
+                "",
+                f"- Launch attempted: {pb.launch_attempted}",
+                f"- Survived: {pb.process_survived_seconds}s",
+                f"- License dialogs absent: {pb.license_dialog_absent}",
+                f"- Main loop initialized: {pb.main_loop_initialized}",
+                f"- License patterns: {pb.license_strings_detected}",
+            ])
+        return "\n".join(lines)

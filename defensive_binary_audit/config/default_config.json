@@ -111,5 +111,12 @@
       "log_file": "logs/pipeline.log",
       "console_output": true
     }
+  },
+  "ci_validation": {
+    "wine_prefix": "/tmp/defensive-audit-wine-prefix",
+    "wine_timeout_sec": 20,
+    "main_loop_survival_sec": 5.0,
+    "require_wine": false,
+    "output_subdirectory": "ci_reports"
   }
 }

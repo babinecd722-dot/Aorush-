@@ -39,6 +39,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output directory (default: patch_artifacts/)",
     )
     p.add_argument("-c", "--config", type=Path, default=None, help="Config JSON path")
+    p.add_argument(
+        "--full-test",
+        action="store_true",
+        help="Run Phase 1-4 pipeline then CI validation (Wine prefix, artifacts, behavioral checks)",
+    )
+    p.add_argument(
+        "--wine-prefix",
+        type=Path,
+        default=None,
+        help="Wine prefix directory (default: /tmp/defensive-audit-wine-prefix or config)",
+    )
     p.add_argument("--quiet", action="store_true", help="Suppress console summary")
     return p
 
@@ -48,6 +59,8 @@ def run_unified_pipeline(
     output_dir: Optional[Path] = None,
     config_path: Optional[Path] = None,
     quiet: bool = False,
+    full_test: bool = False,
+    wine_prefix: Optional[Path] = None,
 ) -> int:
     try:
         cfg_mgr = PipelineConfigManager(config_path)
@@ -94,7 +107,36 @@ def run_unified_pipeline(
                 print(f"    [{key}] {path}")
             print("=" * 76 + "\n")
 
-        return 0 if report.success else 1
+        exit_code = 0 if report.success else 1
+
+        if full_test:
+            from defensive_binary_audit.ci_validation.main import run_ci_full_test
+
+            ci_prefix = wine_prefix
+            if ci_prefix is None:
+                ci_cfg = config.get("ci_validation", {})
+                ci_prefix = Path(ci_cfg.get("wine_prefix", "/tmp/defensive-audit-wine-prefix"))
+
+            ci_code, ci_path = run_ci_full_test(
+                target=target,
+                target_sha256=sha256,
+                output_dir=out,
+                written=written,
+                pipeline_report_id=report.report_id,
+                pipeline_success=report.success,
+                wine_prefix=ci_prefix,
+                config=config,
+            )
+            if not quiet:
+                print("\n" + "=" * 76)
+                print("  CI FULL TEST — VALIDATION REPORT")
+                print("=" * 76)
+                print(f"  Report:  {ci_path}")
+                print(f"  Result:  {'PASS' if ci_code == 0 else 'FAIL'}")
+                print("=" * 76 + "\n")
+            return ci_code
+
+        return exit_code
 
     except PipelineError as exc:
         print(f"[ERROR] {exc.message}", file=sys.stderr)
@@ -116,6 +158,8 @@ def main() -> None:
         output_dir=args.output_dir,
         config_path=args.config,
         quiet=args.quiet,
+        full_test=args.full_test,
+        wine_prefix=args.wine_prefix,
     ))
 
 
