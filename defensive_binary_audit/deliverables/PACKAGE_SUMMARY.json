@@ -1,0 +1,28 @@
+{
+  "package_id": "DLV-20260626132905-756A8F0E",
+  "html_report": "deliverables/PouchLauncher-1.2_88e2_SECURITY_PRESENTATION.html",
+  "reconstructed_pe": "deliverables/PouchLauncher-1.2_88e2_RECONSTRUCTED_756A8F0E.pe.bin",
+  "screenshots": [
+    "deliverables/screenshots/baseline_t0.png",
+    "deliverables/screenshots/baseline_t1.png",
+    "deliverables/screenshots/baseline_t2.png",
+    "deliverables/screenshots/reconstructed_t0.png",
+    "deliverables/screenshots/reconstructed_t1.png",
+    "deliverables/screenshots/reconstructed_t2.png",
+    "deliverables/screenshots/reconstructed_t3.png"
+  ],
+  "behavioral_flags": {
+    "startup_stable": true,
+    "dialog_anomaly_absent": true,
+    "main_loop_entry_confirmed": true,
+    "crash_signature_none": true
+  },
+  "visual_flags": {
+    "startup_sequence_captured": true,
+    "main_window_visible": true,
+    "modal_dialog_absent": true,
+    "visual_baseline_parity": true
+  },
+  "patch_count": 8,
+  "timeline_phases": 5
+}

@@ -1,0 +1,30 @@
+{
+  "package_id": "DLV-20260626132905-756A8F0E",
+  "generated_at": "2026-06-26T13:29:05.732338+00:00",
+  "target_filename": "PouchLauncher-1.2_88e2.exe",
+  "target_sha256": "756a8f0ed2c3d0063ede4e3d6ab38634fb5e06f99b4de12083f77708af2fc455",
+  "pipeline_report_id": "PIPE-20260626131841-756A8F0ED2C3",
+  "reconstructed_pe_path": "deliverables/PouchLauncher-1.2_88e2_RECONSTRUCTED_756A8F0E.pe.bin",
+  "reconstructed_pe_sha256": "07865a502caad7cc3c072fa20145e0cc450a92afc240ba347c1267570cb2a422",
+  "reconstructed_pe_size": 2724352,
+  "html_report_path": "deliverables/PouchLauncher-1.2_88e2_SECURITY_PRESENTATION.html",
+  "screenshot_paths": [
+    "deliverables/screenshots/baseline_t0.png",
+    "deliverables/screenshots/baseline_t1.png",
+    "deliverables/screenshots/baseline_t2.png",
+    "deliverables/screenshots/reconstructed_t0.png",
+    "deliverables/screenshots/reconstructed_t1.png",
+    "deliverables/screenshots/reconstructed_t2.png",
+    "deliverables/screenshots/reconstructed_t3.png"
+  ],
+  "source_artifacts": {
+    "final_report": "patch_artifacts/PouchLauncher-1.2_88e2.exe_PIPE-20260626131841-756A8F0ED2C3_FINAL_REPORT.json",
+    "reconstructed_pe": "patch_artifacts/memory_dumps/PouchLauncher-1.2_88e2.exe_PIPE-20260626131841-756A8F0ED2C3_reconstructed.pe.bin",
+    "manifest": "patch_artifacts/PIPE-20260626131841-756A8F0ED2C3_manifest.json",
+    "ci_report": "patch_artifacts/ci_reports/CITEST-20260626132152-756A8F0ED2C3_CI_FULL_TEST.json",
+    "behavioral": "patch_artifacts/ci_reports/behavioral/BEHAV-20260626132141-756A8F0ED2C3_BEHAVIORAL.json",
+    "visual": "patch_artifacts/ci_reports/visual/VISUAL-20260626132323-756A8F0ED2C3_VISUAL.json",
+    "screenshots_dir": "patch_artifacts/ci_reports/visual/screenshots",
+    "final_bundle": "patch_artifacts/ci_reports/FINAL_PIPE-20260626131841-756A8F0ED2C3.json"
+  }
+}

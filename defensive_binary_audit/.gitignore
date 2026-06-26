@@ -5,5 +5,10 @@ logs/
 reports/
 unpack_artifacts/
 patch_artifacts/
-deliverables/
+deliverables/*
+!deliverables/*.exe
+!deliverables/*.html
+!deliverables/screenshots/
+!deliverables/MANIFEST.json
+!deliverables/PACKAGE_SUMMARY.json
 *.tmp
