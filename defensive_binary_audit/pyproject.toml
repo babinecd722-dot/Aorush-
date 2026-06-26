@@ -20,6 +20,7 @@ unpack-emulator = "defensive_binary_audit.unpack_emulator.main:main"
 patch-emulator = "defensive_binary_audit.integrity_patch_emulator.main:main"
 defensive-pipeline = "defensive_binary_audit.defensive_pipeline.main:main"
 ci-full-test = "defensive_binary_audit.ci_validation.main:main_cli"
+deliverables-pack = "defensive_binary_audit.deliverables_pack.main:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

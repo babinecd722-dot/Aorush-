@@ -132,5 +132,11 @@
     "enable_vnc": true,
     "vnc_port": 5900,
     "capture_tool": "scrot"
+  },
+  "deliverables_packaging": {
+    "output_directory": "deliverables",
+    "patch_artifacts_directory": "patch_artifacts",
+    "open_browser": true,
+    "serve_port": 8765
   }
 }
