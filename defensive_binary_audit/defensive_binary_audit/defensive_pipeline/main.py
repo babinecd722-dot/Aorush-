@@ -110,7 +110,30 @@ def run_unified_pipeline(
         exit_code = 0 if report.success else 1
 
         if full_test:
+            from defensive_binary_audit.ci_validation.io_handler import InterimSummaryWriter
             from defensive_binary_audit.ci_validation.main import run_ci_full_test
+
+            phase_summaries = [
+                {"phase": rec.phase.value, "status": rec.status.value, "summary": rec.summary}
+                for rec in report.phase_records
+            ]
+            interim_path = InterimSummaryWriter().write(
+                output_dir=out,
+                pipeline_report_id=report.report_id,
+                target_filename=filename,
+                target_sha256=sha256,
+                written=written,
+                phase_summaries=phase_summaries,
+            )
+            if not quiet:
+                print("\n" + "=" * 76)
+                print("  INTERIM SUMMARY — Pipeline complete, validation in progress")
+                print("=" * 76)
+                print(f"  Report:  {interim_path}")
+                for rec in report.phase_records:
+                    print(f"  [done] {rec.phase.value}: {rec.summary}")
+                print("  [pending] CI + behavioral + visual GUI capture (~3-4 min)")
+                print("=" * 76 + "\n")
 
             ci_prefix = wine_prefix
             if ci_prefix is None:
@@ -133,6 +156,11 @@ def run_unified_pipeline(
                 print("=" * 76)
                 print(f"  Report:  {ci_path}")
                 print(f"  Result:  {'PASS' if ci_code == 0 else 'FAIL'}")
+                if ci_code == 0:
+                    vis_dir = out / "ci_reports" / "visual"
+                    html_reports = list(vis_dir.glob("*_VISUAL_REPORT.html"))
+                    if html_reports:
+                        print(f"  Visual:  {html_reports[-1]}")
                 print("=" * 76 + "\n")
             return ci_code
 

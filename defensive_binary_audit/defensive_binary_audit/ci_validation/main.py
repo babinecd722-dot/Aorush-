@@ -23,12 +23,14 @@ def run_ci_full_test(
     pipeline_success: bool,
     wine_prefix: Optional[Path] = None,
     config: Optional[dict] = None,
+    run_visual: bool = True,
 ) -> tuple[int, Path]:
     logger = get_ci_logger()
     logger.info("Starting CI full test validation")
 
     ci_cfg = (config or {}).get("ci_validation", {})
     beh_cfg = (config or {}).get("behavioral_validation", {})
+    vis_cfg = (config or {}).get("visual_validation", {})
     timeout = int(beh_cfg.get("wine_timeout_sec") or ci_cfg.get("wine_timeout_sec", 25))
     survival = float(
         beh_cfg.get("main_loop_survival_sec") or ci_cfg.get("main_loop_survival_sec", 5.0)
@@ -36,6 +38,8 @@ def run_ci_full_test(
     report = CIFullTestOrchestrator(
         wine_timeout_sec=timeout,
         main_loop_survival_sec=survival,
+        run_visual=run_visual,
+        visual_config=vis_cfg,
     ).run(
         target=target,
         target_sha256=target_sha256,
@@ -48,6 +52,28 @@ def run_ci_full_test(
 
     ci_path = CIOutputHandler().write(report, output_dir)
     logger.info("CI report: %s overall=%s", ci_path, report.overall_pass)
+
+    final_path = output_dir / "ci_reports" / f"FINAL_{report.pipeline_report_id}.json"
+    final_payload = {
+        "status": "complete",
+        "pipeline_report_id": report.pipeline_report_id,
+        "ci_report": str(ci_path),
+        "overall_pass": report.overall_pass,
+        "behavioral_flags": (
+            report.differential_behavior.flags.to_dict()
+            if report.differential_behavior else None
+        ),
+        "visual_flags": (
+            report.visual_validation.flags.to_dict()
+            if report.visual_validation else None
+        ),
+        "visual_html": (
+            report.visual_validation.html_report_path
+            if report.visual_validation else None
+        ),
+    }
+    final_path.write_text(__import__("json").dumps(final_payload, indent=2), encoding="utf-8")
+    logger.info("Final deliverable: %s", final_path)
 
     fails = [c for c in report.checks if c.status.value == "fail"]
     if fails:

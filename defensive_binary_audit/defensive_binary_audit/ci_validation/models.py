@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Any, Optional
 
 from defensive_binary_audit.ci_validation.behavioral.models import DifferentialBehaviorReport
+from defensive_binary_audit.ci_validation.visual.models import VisualValidationReport
 
 
 class CIValidationPhase(str, enum.Enum):
@@ -99,6 +100,7 @@ class CIFullTestReport:
     wine_baseline: Optional[WineBaselineResult]
     patched_behavior: Optional[PatchedImageBehaviorResult]
     differential_behavior: Optional[DifferentialBehaviorReport]
+    visual_validation: Optional[VisualValidationReport]
     reconstructed_validation: Optional[ReconstructedPEValidation]
     overall_pass: bool
     output_directory: str

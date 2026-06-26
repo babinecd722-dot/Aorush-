@@ -125,5 +125,12 @@
     "poll_interval_sec": 0.25,
     "require_all_flags": false,
     "winedebug_channels": "+timestamp,+msg,+dialog,+seh,err+all"
+  },
+  "visual_validation": {
+    "display": ":99",
+    "resolution": "1024x768x24",
+    "enable_vnc": true,
+    "vnc_port": 5900,
+    "capture_tool": "scrot"
   }
 }

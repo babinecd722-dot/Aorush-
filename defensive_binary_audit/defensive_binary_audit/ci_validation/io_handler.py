@@ -84,4 +84,52 @@ class CIOutputHandler:
                     f"  - {entry.phase}: baseline={entry.baseline_count} "
                     f"reconstructed={entry.reconstructed_count} (Δ{entry.delta})"
                 )
+        if report.visual_validation:
+            vv = report.visual_validation
+            vf = vv.flags
+            lines.extend([
+                "",
+                "## Visual GUI Validation",
+                "",
+                f"- overall_visual_pass: {vv.overall_visual_pass}",
+                f"- startup_sequence_captured: {vf.startup_sequence_captured}",
+                f"- main_window_visible: {vf.main_window_visible}",
+                f"- modal_dialog_absent: {vf.modal_dialog_absent}",
+                f"- HTML report: {vv.html_report_path}",
+                f"- Screenshots: {len(vv.reconstructed_captures)} reconstructed captures",
+            ])
         return "\n".join(lines)
+
+
+class InterimSummaryWriter:
+    """Writes interim status after pipeline phases, before long Wine/visual validation."""
+
+    def write(
+        self,
+        output_dir: Path,
+        pipeline_report_id: str,
+        target_filename: str,
+        target_sha256: str,
+        written: dict[str, Path],
+        phase_summaries: list[dict],
+        status: str = "pipeline_complete_awaiting_validation",
+    ) -> Path:
+        sub = output_dir / "ci_reports"
+        sub.mkdir(parents=True, exist_ok=True)
+        path = sub / f"INTERIM_{pipeline_report_id}.json"
+        payload = {
+            "status": status,
+            "pipeline_report_id": pipeline_report_id,
+            "target_filename": target_filename,
+            "target_sha256": target_sha256,
+            "phases_completed": phase_summaries,
+            "artifacts_ready": {k: str(v) for k, v in written.items()},
+            "next_steps": [
+                "ci_dependency_check",
+                "wine_baseline_capture",
+                "differential_behavioral_analysis",
+                "visual_gui_capture",
+            ],
+        }
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return path

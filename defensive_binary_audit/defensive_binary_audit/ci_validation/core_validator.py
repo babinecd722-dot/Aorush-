@@ -23,6 +23,9 @@ import pefile
 from defensive_binary_audit.ci_validation.behavioral.core_analyzer import BehavioralDifferentialOrchestrator
 from defensive_binary_audit.ci_validation.behavioral.io_handler import BehavioralOutputHandler
 from defensive_binary_audit.ci_validation.behavioral.logging_diagnostics import get_behavioral_logger
+from defensive_binary_audit.ci_validation.visual.core_capture import VisualCaptureEngine
+from defensive_binary_audit.ci_validation.visual.io_handler import VisualOutputHandler
+from defensive_binary_audit.ci_validation.visual.logging_diagnostics import get_visual_logger
 from defensive_binary_audit.ci_validation.models import (
     CIValidationPhase,
     CIFullTestReport,
@@ -548,9 +551,13 @@ class CIFullTestOrchestrator:
         self,
         wine_timeout_sec: int = 20,
         main_loop_survival_sec: float = 5.0,
+        run_visual: bool = True,
+        visual_config: Optional[dict] = None,
     ) -> None:
         self.wine_timeout_sec = wine_timeout_sec
         self.main_loop_survival_sec = main_loop_survival_sec
+        self.run_visual = run_visual
+        self.visual_config = visual_config or {}
 
     def run(
         self,
@@ -663,6 +670,63 @@ class CIFullTestOrchestrator:
                     message="Wine unavailable — behavioral differential skipped",
                 ))
 
+        visual_validation = None
+        if self.run_visual and recon_path and recon_path.exists():
+            vis_logger = get_visual_logger()
+            vis_logger.info("Starting GUI capture validation on DISPLAY=%s", self.visual_config.get("display", ":99"))
+            vc = self.visual_config
+            visual_validation = VisualCaptureEngine(
+                display=str(vc.get("display", ":99")),
+                wine_prefix=prefix,
+                capture_tool=str(vc.get("capture_tool", "scrot")),
+            ).run_validation(
+                original_target=target,
+                reconstructed_pe=recon_path,
+                output_dir=output_dir,
+                target_sha256=target_sha256,
+                target_filename=target.name,
+                pipeline_report_id=pipeline_report_id,
+                enable_vnc=bool(vc.get("enable_vnc", True)),
+            )
+            VisualOutputHandler().write(visual_validation, output_dir)
+            vf = visual_validation.flags
+            all_checks.extend([
+                ValidationCheck(
+                    check_id="VIS-SEQ",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="startup_sequence_captured",
+                    status=ValidationStatus.PASS if vf.startup_sequence_captured else ValidationStatus.WARN,
+                    message=f"startup_sequence_captured={vf.startup_sequence_captured}",
+                    evidence=[c.path for c in visual_validation.reconstructed_captures[:3]],
+                ),
+                ValidationCheck(
+                    check_id="VIS-MAIN",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="main_window_visible",
+                    status=ValidationStatus.PASS if vf.main_window_visible else ValidationStatus.WARN,
+                    message=f"main_window_visible={vf.main_window_visible}",
+                ),
+                ValidationCheck(
+                    check_id="VIS-MODAL",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="modal_dialog_absent",
+                    status=ValidationStatus.PASS if vf.modal_dialog_absent else ValidationStatus.WARN,
+                    message=f"modal_dialog_absent={vf.modal_dialog_absent}",
+                ),
+                ValidationCheck(
+                    check_id="VIS-PASS",
+                    phase=CIValidationPhase.BEHAVIORAL_ANALYSIS,
+                    name="Visual GUI validation",
+                    status=(
+                        ValidationStatus.PASS
+                        if visual_validation.overall_visual_pass
+                        else ValidationStatus.WARN
+                    ),
+                    message=f"overall_visual_pass={visual_validation.overall_visual_pass}",
+                    evidence=[visual_validation.html_report_path],
+                ),
+            ])
+
         overall = all(
             c.status in (ValidationStatus.PASS, ValidationStatus.WARN, ValidationStatus.SKIP)
             for c in all_checks
@@ -680,6 +744,7 @@ class CIFullTestOrchestrator:
             wine_baseline=wine_result,
             patched_behavior=patched_behavior,
             differential_behavior=differential_behavior,
+            visual_validation=visual_validation,
             reconstructed_validation=recon_val,
             overall_pass=overall,
             output_directory=str(output_dir),
